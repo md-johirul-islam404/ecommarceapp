@@ -1,16 +1,43 @@
+import 'package:appecommerce/core/network/dio_client.dart';
+import 'package:appecommerce/core/router/app_router.dart';
+import 'package:appecommerce/core/storage/preference_service.dart';
+import 'package:appecommerce/features/cart/data/cart_remote_datasource.dart';
+import 'package:appecommerce/features/cart/data/cart_repository.dart';
+import 'package:appecommerce/features/cart/provider/cart_provider.dart';
+import 'package:appecommerce/features/product/data/product_repository.dart';
+import 'package:appecommerce/features/product/provider/product_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final DioClient dioClient;
+  final PreferenceService preferenceService;
+  const MyApp({super.key, required this.dioClient, required this.preferenceService});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => ProductProvider(
+            productRepository: ProductRepositoryImpl(dioClient: dioClient),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => CartProvider(
+            cartRepository: CartRepositoryImpl(
+              preferenceService: preferenceService,
+              remoteDatasource: CartRemoteDatasourceImpl(dioClient: dioClient),
+            ),
+          ),
+        ),
+      ],
+      child: MaterialApp.router(
+        title: 'Flutter Demo',
+        theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.deepPurple)),
+        routerConfig: AppRouter.router,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
